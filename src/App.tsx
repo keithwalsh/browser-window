@@ -1,12 +1,15 @@
 import { useState, useCallback } from 'react'
-import { Typography, Box, Container } from '@mui/material'
+import { Typography, Box, Container, useTheme } from '@mui/material'
 import BrowserWindow from './components/BrowserWindow'
 import FileUploader from './components/FileUploader'
+import ThemeToggle from './components/ThemeToggle'
 import './App.css'
 
 function App() {
   const [imageUrl, setImageUrl] = useState<string>('')
   const initialUrl = 'http://localhost:3000'
+  const theme = useTheme()
+  const isDark = theme.palette.mode === 'dark'
 
   // Handler for file selection
   const handleFileSelect = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
@@ -23,17 +26,35 @@ function App() {
 
   return (
     <Container maxWidth="lg">
-      <Box sx={{ my: 4, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <Typography variant="h4" component="h1" gutterBottom>
+      <ThemeToggle />
+      <Box 
+        sx={{ 
+          my: 4, 
+          display: 'flex', 
+          flexDirection: 'column', 
+          alignItems: 'center',
+          transition: 'all 0.3s ease',
+        }}
+      >
+        <Typography 
+          variant="h4" 
+          component="h1" 
+          gutterBottom
+          sx={{ 
+            fontWeight: 500,
+            color: isDark ? 'primary.light' : 'primary.dark',
+            mb: 3,
+          }}
+        >
           Browser Window Image Preview
         </Typography>
         
-        <FileUploader
+          <FileUploader
             buttonText="Select Image"
             accept="image/*"
             onFileChange={handleFileSelect}
           />
-        
+
         {imageUrl && (
           <BrowserWindow 
             imageUrl={imageUrl} 
