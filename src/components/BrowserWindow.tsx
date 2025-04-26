@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Box, Slider } from '@mui/material';
 import styles from './BrowserWindow.module.css';
 
 interface BrowserWindowProps {
@@ -34,25 +35,29 @@ const BrowserWindow: React.FC<BrowserWindowProps> = ({
     }
   };
 
-  const handleResize = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setWidth(Number(e.target.value));
+  const handleResize = (_event: Event, newValue: number | number[]) => {
+    setWidth(newValue as number);
   };
 
   return (
     <div>
-      <div className={styles.resizeControls}>
-        <label>
-          Window Width: {width}px
-          <input
-            type="range"
-            min="400"
-            max="1200"
-            value={width}
-            onChange={handleResize}
-            className={styles.resizeSlider}
-          />
-        </label>
-      </div>
+      <Box sx={{ width: '100%', maxWidth: '600px', mx: 'auto', mb: 2 }}>
+        <Slider
+          value={width}
+          onChange={handleResize}
+          aria-labelledby="window-width-slider"
+          valueLabelDisplay="auto"
+          step={10}
+          marks={[
+            { value: 400, label: '400px' },
+            { value: 800, label: '800px' },
+            { value: 1200, label: '1200px' }
+          ]}
+          min={400}
+          max={1200}
+          sx={{ color: '#1976d2' }}
+        />
+      </Box>
       
       <div className={styles.browserWindow} style={{ maxWidth: `${width}px` }}>
         <div className={styles.browserWindowHeader}>

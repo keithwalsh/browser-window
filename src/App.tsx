@@ -28,8 +28,7 @@ function App() {
           Browser Window Image Preview
         </Typography>
         
-        <FileUploader 
-            title="Upload Preview Image" 
+        <FileUploader
             buttonText="Select Image"
             accept="image/*"
             onFileChange={handleFileSelect}
