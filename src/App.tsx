@@ -24,18 +24,16 @@ function App() {
   return (
     <Container maxWidth="lg">
       <Box sx={{ my: 4, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <Typography variant="h3" component="h1" gutterBottom>
+        <Typography variant="h4" component="h1" gutterBottom>
           Browser Window Image Preview
         </Typography>
         
-        <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
-          <FileUploader 
+        <FileUploader 
             title="Upload Preview Image" 
             buttonText="Select Image"
             accept="image/*"
             onFileChange={handleFileSelect}
           />
-        </Box>
         
         {imageUrl && (
           <BrowserWindow 
@@ -44,6 +42,7 @@ function App() {
             initialWidth={800}
           />
         )}
+        
       </Box>
     </Container>
   )

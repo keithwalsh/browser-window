@@ -1,4 +1,4 @@
-import { Button, Typography, Box, Paper } from '@mui/material'
+import { Button, Typography, Box } from '@mui/material'
 import CloudUploadIcon from '@mui/icons-material/CloudUpload'
 import { ChangeEvent } from 'react'
 
@@ -16,11 +16,20 @@ function FileUploader({
   onFileChange
 }: FileUploaderProps) {
   return (
-    <Paper elevation={3} sx={{ p: 3, mb: 3, width: '100%', maxWidth: '600px' }}>
-      <Typography variant="h6" gutterBottom>
+     <div>
+      <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 1, textAlign: 'left' }}>
+          <ol>
+            <li>Click the "{buttonText}" button to upload an image</li>
+            <li>Once uploaded, the image will appear in a browser window mockup</li>
+            <li>Adjust the browser window width using the slider</li>
+            <li>Click on the URL bar to edit the displayed address</li>
+          </ol>
+        </Typography>
+      </Box>
+      <Typography variant="subtitle1" gutterBottom>
         {title}
       </Typography>
-
       <Box>
         <Button
           variant="contained"
@@ -37,7 +46,7 @@ function FileUploader({
           />
         </Button>
       </Box>
-    </Paper>
+    </div>
   )
 }
 
