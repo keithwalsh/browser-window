@@ -8,7 +8,7 @@ import {
 } from '@mui/material';
 import Brightness4Icon from '@mui/icons-material/Brightness4';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
-import { useTheme } from '../theme/useTheme';
+import { useTheme } from '../../theme/useTheme';
 
 const ThemeToggle: React.FC = () => {
   const themeContext = useTheme();

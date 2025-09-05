@@ -1,46 +1,71 @@
-import React, { useState } from 'react';
+/**
+ * @fileoverview Browser window component that displays an image within a
+ * resizable browser-like interface with URL bar and window controls.
+ */
+
+import { useRef, forwardRef, useImperativeHandle } from 'react';
 import { Box, Slider, Paper, useTheme as useMuiTheme } from '@mui/material';
 import styles from './BrowserWindow.module.css';
-import { useTheme } from '../theme/useTheme';
+import { useTheme } from '../../theme/useTheme';
+import { useEditableState, useSliderState } from '../../hooks';
 
+/**
+ * Props for the BrowserWindow component.
+ */
 interface BrowserWindowProps {
+  /** The URL of the image to display in the browser window */
   imageUrl: string;
+  /** The initial URL to display in the address bar */
   url?: string;
+  /** The initial width of the browser window in pixels */
   initialWidth?: number;
 }
 
-const BrowserWindow: React.FC<BrowserWindowProps> = ({ 
+/**
+ * Ref interface for BrowserWindow component.
+ */
+export interface BrowserWindowRef {
+  /** Get the browser window element for downloading */
+  getBrowserWindowElement: () => HTMLElement | null;
+}
+
+/**
+ * A browser window component that displays an image within a resizable,
+ * browser-like interface with interactive URL bar and macOS-style window controls.
+ * Supports dark and light themes with smooth transitions.
+ */
+const BrowserWindow = forwardRef<BrowserWindowRef, BrowserWindowProps>(({ 
   imageUrl, 
   url: initialUrl = 'http://localhost:3000',
   initialWidth = 800 
-}) => {
-  const [url, setUrl] = useState(initialUrl);
-  const [isEditingUrl, setIsEditingUrl] = useState(false);
-  const [width, setWidth] = useState(initialWidth);
+}, ref) => {
   const { mode } = useTheme();
   const muiTheme = useMuiTheme();
+  const browserWindowRef = useRef<HTMLDivElement>(null);
   
-  const handleUrlClick = () => {
-    setIsEditingUrl(true);
-  };
+  // Expose the browser window element through ref
+  useImperativeHandle(ref, () => ({
+    getBrowserWindowElement: () => browserWindowRef.current
+  }));
 
-  const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setUrl(e.target.value);
-  };
+  // Use custom hooks for state management
+  const {
+    value: url,
+    isEditing: isEditingUrl,
+    handleChange: handleUrlChange,
+    handleKeyDown: handleUrlKeyDown,
+    handleBlur: handleUrlBlur,
+    handleClick: handleUrlClick
+  } = useEditableState(initialUrl);
 
-  const handleUrlBlur = () => {
-    setIsEditingUrl(false);
-  };
-
-  const handleUrlKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      setIsEditingUrl(false);
-    }
-  };
-
-  const handleResize = (_event: Event, newValue: number | number[]) => {
-    setWidth(newValue as number);
-  };
+  const {
+    value: width,
+    handleChange: handleResize
+  } = useSliderState(initialWidth, {
+    min: 400,
+    max: 1000,
+    step: 10
+  });
 
   return (
     <Box>
@@ -53,18 +78,19 @@ const BrowserWindow: React.FC<BrowserWindowProps> = ({
           step={10}
           marks={[
             { value: 400, label: '400px' },
-            { value: 800, label: '800px' },
-            { value: 1200, label: '1200px' }
+            { value: 700, label: '700px' },
+            { value: 1000, label: '1000px' }
           ]}
           min={400}
-          max={1200}
+          max={1000}
         />
       </Box>
       
       <Paper 
+        ref={browserWindowRef}
         elevation={mode === 'dark' ? 3 : 1}
         sx={{
-          maxWidth: `${width}px`,
+          width: `${width}px`,
           margin: '1rem auto',
           overflow: 'hidden',
           borderRadius: 1,
@@ -171,9 +197,6 @@ const BrowserWindow: React.FC<BrowserWindowProps> = ({
           sx={{
             backgroundColor: mode === 'dark' ? muiTheme.palette.background.paper : '#fff',
             padding: '1rem',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
             transition: 'background-color 0.3s ease',
           }}
         >
@@ -182,6 +205,8 @@ const BrowserWindow: React.FC<BrowserWindowProps> = ({
       </Paper>
     </Box>
   );
-};
+});
+
+BrowserWindow.displayName = 'BrowserWindow';
 
 export default BrowserWindow; 

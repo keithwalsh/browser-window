@@ -1,38 +1,44 @@
-import React, { useState, useMemo, ReactNode, useEffect } from 'react';
-import { ThemeProvider as MuiThemeProvider, createTheme, responsiveFontSizes } from '@mui/material/styles';
+/**
+ * @fileoverview Theme provider component that manages light/dark mode state and
+ * applies MUI theme configuration with CSS custom properties for browser window
+ * component styling.
+ */
+
+import React, { useMemo, ReactNode, useEffect, useCallback } from 'react';
+import { ThemeProvider as MuiThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { ThemeContext } from './ThemeContextCore';
+import { useLocalStorage } from '../hooks';
+import { createAppTheme, getCSSCustomProperties } from '../styles';
 
 interface ThemeProviderProps {
   children: ReactNode;
 }
 
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
-  // Initialize theme mode from localStorage if available, otherwise use system preference
-  const [mode, setMode] = useState<'light' | 'dark'>(() => {
-    const savedMode = localStorage.getItem('themeMode');
-    if (savedMode === 'light' || savedMode === 'dark') {
-      return savedMode;
-    }
-    // Check system preference
+  // Get system preference
+  const getSystemPreference = (): 'light' | 'dark' => {
     return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-  });
+  };
+
+  // Use localStorage hook for theme mode persistence
+  const { value: mode, setValue: setMode } = useLocalStorage<'light' | 'dark'>(
+    'themeMode',
+    getSystemPreference()
+  );
 
   // Toggle between light and dark themes
-  const toggleTheme = () => {
-    setMode((prevMode) => {
-      const newMode = prevMode === 'light' ? 'dark' : 'light';
-      localStorage.setItem('themeMode', newMode);
-      return newMode;
-    });
-  };
+  const toggleTheme = useCallback(() => {
+    setMode(prevMode => prevMode === 'light' ? 'dark' : 'light');
+  }, [setMode]);
 
   // Listen for system theme changes
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     const handleChange = (e: MediaQueryListEvent) => {
-      // Only update if user hasn't set a preference
-      if (!localStorage.getItem('themeMode')) {
+      // Only update if user hasn't explicitly set a preference
+      // The localStorage hook will handle the persistence logic
+      if (mode === getSystemPreference()) {
         setMode(e.matches ? 'dark' : 'light');
       }
     };
@@ -44,78 +50,19 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     }
     
     return undefined;
-  }, []);
+  }, [mode, setMode]);
 
-  // Create the theme object with enhanced configuration
-  const theme = useMemo(() => {
-    // Create base theme
-    let themeConfig = createTheme({
-      palette: {
-        mode,
-        primary: {
-          main: '#1976d2',
-          ...(mode === 'dark' && {
-            main: '#90caf9', // Lighter blue in dark mode for better contrast
-          }),
-        },
-        secondary: {
-          main: '#dc004e',
-          ...(mode === 'dark' && {
-            main: '#f48fb1', // Lighter pink in dark mode
-          }),
-        },
-        background: {
-          default: mode === 'light' ? '#fff' : '#121212',
-          paper: mode === 'light' ? '#fff' : '#1e1e1e',
-        },
-        text: {
-          primary: mode === 'light' ? 'rgba(0, 0, 0, 0.87)' : 'rgba(255, 255, 255, 0.87)',
-          secondary: mode === 'light' ? 'rgba(0, 0, 0, 0.6)' : 'rgba(255, 255, 255, 0.6)',
-        },
-      },
-      components: {
-        MuiPaper: {
-          styleOverrides: {
-            root: {
-              transition: 'background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease',
-            },
-          },
-        },
-        MuiAppBar: {
-          styleOverrides: {
-            root: {
-              transition: 'background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease',
-            },
-          },
-        },
-        MuiButton: {
-          styleOverrides: {
-            root: {
-              transition: 'background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease',
-            },
-          },
-        },
-        MuiIconButton: {
-          styleOverrides: {
-            root: {
-              transition: 'background-color 0.3s ease, color 0.3s ease',
-            },
-          },
-        },
-        MuiInputBase: {
-          styleOverrides: {
-            root: {
-              transition: 'background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease',
-            },
-          },
-        },
-      },
-    });
+  // Create the theme object using centralized theme configuration
+  const theme = useMemo(() => createAppTheme(mode), [mode]);
 
-    // Add responsive font sizes
-    themeConfig = responsiveFontSizes(themeConfig);
+  // Apply CSS custom properties for browser window styling
+  useEffect(() => {
+    const customProperties = getCSSCustomProperties(mode);
+    const root = document.documentElement;
     
-    return themeConfig;
+    Object.entries(customProperties).forEach(([property, value]) => {
+      root.style.setProperty(property, value);
+    });
   }, [mode]);
 
   // Create context value
@@ -124,7 +71,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
       mode,
       toggleTheme,
     }),
-    [mode]
+    [mode, toggleTheme]
   );
 
   return (

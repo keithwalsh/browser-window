@@ -68,8 +68,9 @@
 }
 
 .browserImage {
-  max-width: 100%;
-  height: auto;
+  width: 100%;
+  max-height: 500px;
+  object-fit: contain;
   display: block;
 }
 
@@ -110,28 +111,4 @@
   cursor: pointer;
 }
 
-/* Light theme variables (default) */
-:root {
-  --browser-border-color: #e0e0e0;
-  --header-bg-color: #f0f0f0;
-  --address-bar-bg-color: #fff;
-  --address-bar-text-color: #333;
-  --bar-color: #aaa;
-  --body-bg-color: #fff;
-  --input-text-color: #333;
-  --resize-controls-bg-color: #f8f8f8;
-  --resize-controls-text-color: #444;
-}
-
-/* Dark theme variables */
-.darkTheme {
-  --browser-border-color: #444;
-  --header-bg-color: #333;
-  --address-bar-bg-color: #222;
-  --address-bar-text-color: #ddd;
-  --bar-color: #ddd;
-  --body-bg-color: #222;
-  --input-text-color: #ddd;
-  --resize-controls-bg-color: #333;
-  --resize-controls-text-color: #ddd;
-} 
+/* CSS custom properties are now managed by the theme system in styles/theme.ts */ 
