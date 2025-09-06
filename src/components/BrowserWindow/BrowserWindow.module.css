@@ -72,6 +72,8 @@
   max-height: 500px;
   object-fit: contain;
   display: block;
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
 }
 
 .urlInput {

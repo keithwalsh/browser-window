@@ -1,4 +1,4 @@
-import React, { useRef } from 'react'
+import React, { useRef, useState, useEffect } from 'react'
 import { Typography, Box, Container, useTheme, Alert } from '@mui/material'
 import { BrowserWindow, FileUploader, ThemeToggle, SectionErrorBoundary } from './components'
 import { useFileReader, useDownloadImage } from './hooks'
@@ -11,6 +11,8 @@ function App() {
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
   const browserWindowRef = useRef<BrowserWindowRef>(null)
+  const browserSectionRef = useRef<HTMLDivElement>(null)
+  const [hasImageBeenLoaded, setHasImageBeenLoaded] = useState(false)
 
   // Use the custom file reader hook
   const { content: imageUrl, readFile, error, file } = useFileReader({
@@ -21,6 +23,43 @@ function App() {
 
   // Use the download hook
   const { downloadImage, isDownloading } = useDownloadImage()
+
+  // Effect to handle smooth scroll transition when image is loaded for the first time
+  useEffect(() => {
+    if (imageUrl && !hasImageBeenLoaded) {
+      setHasImageBeenLoaded(true)
+      
+      // Enhanced scroll with smoother, more dramatic movement
+      const performSmoothScroll = () => {
+        const element = browserSectionRef.current
+        if (element) {
+          requestAnimationFrame(() => {
+            const elementRect = element.getBoundingClientRect()
+            const currentScrollY = window.scrollY
+            
+            // Calculate a much more dramatic scroll - position browser window near top of viewport
+            const targetScrollY = currentScrollY + elementRect.top - 5 // Scroll down much more
+            
+            console.log('Enhanced scroll:', {
+              currentScrollY,
+              elementTop: elementRect.top,
+              targetScrollY,
+              scrollDistance: targetScrollY - currentScrollY
+            })
+            
+            // Always scroll down significantly to showcase the browser window
+            window.scrollTo({
+              top: Math.max(0, targetScrollY),
+              behavior: 'smooth'
+            })
+          })
+        }
+      }
+      
+      // Delay the scroll to create a more dramatic reveal effect
+      setTimeout(() => performSmoothScroll(), 200)
+    }
+  }, [imageUrl, hasImageBeenLoaded])
 
   // Handler for file selection with business logic separated
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -77,6 +116,7 @@ function App() {
           flexDirection: 'column', 
           alignItems: 'center',
           transition: 'all 0.3s ease',
+          minHeight: '100vh', // Ensure enough height for scrolling
         }}
       >
         <Typography 
@@ -114,14 +154,25 @@ function App() {
 
         {imageUrl && typeof imageUrl === 'string' && (
           <SectionErrorBoundary sectionName="Browser Window Preview">
-            <BrowserWindow 
-              ref={browserWindowRef}
-              imageUrl={imageUrl} 
-              url={initialUrl}
-              initialWidth={800}
-              onDownload={handleDownload}
-              isDownloading={isDownloading}
-            />
+            <Box 
+              ref={browserSectionRef}
+              sx={{
+                opacity: hasImageBeenLoaded ? 1 : 0,
+                transform: hasImageBeenLoaded ? 'translateY(0)' : 'translateY(40px)',
+                transition: 'opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), transform 0.8s cubic-bezier(0.4, 0, 0.2, 1)',
+                mt: 4, // Add even more top margin for dramatic scroll effect
+                width: '100%',
+              }}
+            >
+              <BrowserWindow 
+                ref={browserWindowRef}
+                imageUrl={imageUrl} 
+                url={initialUrl}
+                initialWidth={700}
+                onDownload={handleDownload}
+                isDownloading={isDownloading}
+              />
+            </Box>
           </SectionErrorBoundary>
         )}
         

@@ -3,7 +3,7 @@
  * resizable browser-like interface with URL bar and window controls.
  */
 
-import { useRef, forwardRef, useImperativeHandle } from 'react';
+import { useRef, forwardRef, useImperativeHandle, useState } from 'react';
 import { Box, Slider, Paper, Button, useTheme as useMuiTheme } from '@mui/material';
 import { Download } from '@mui/icons-material';
 import styles from './BrowserWindow.module.css';
@@ -50,6 +50,10 @@ const BrowserWindow = forwardRef<BrowserWindowRef, BrowserWindowProps>(({
   const muiTheme = useMuiTheme();
   const browserWindowRef = useRef<HTMLDivElement>(null);
   
+  // Creature animation state
+  const [showCreature, setShowCreature] = useState(false);
+  const [creaturePhase, setCreaturePhase] = useState<'dropping' | 'annoyed' | 'closing'>('dropping');
+  
   // Expose the browser window element through ref
   useImperativeHandle(ref, () => ({
     getBrowserWindowElement: () => browserWindowRef.current
@@ -73,6 +77,30 @@ const BrowserWindow = forwardRef<BrowserWindowRef, BrowserWindowProps>(({
     max: 1000,
     step: 10
   });
+
+  // Handle creature animation sequence
+  const handleMenuClick = () => {
+    if (showCreature) return; // Prevent multiple clicks during animation
+    
+    setShowCreature(true);
+    setCreaturePhase('dropping');
+    
+    // After dropping animation, show annoyed phase
+    setTimeout(() => {
+      setCreaturePhase('annoyed');
+    }, 500);
+    
+    // After being annoyed, close the menu and hide
+    setTimeout(() => {
+      setCreaturePhase('closing');
+    }, 1200);
+    
+    // Hide creature completely
+    setTimeout(() => {
+      setShowCreature(false);
+      setCreaturePhase('dropping');
+    }, 1800);
+  };
 
   return (
     <Box sx={{ width: '100%' }} component="section" role="region" aria-label="Browser window mockup">
@@ -146,7 +174,7 @@ const BrowserWindow = forwardRef<BrowserWindowRef, BrowserWindowProps>(({
           sx={{
             display: 'flex',
             alignItems: 'center',
-            padding: '0.5rem 1rem',
+            padding: '0.25rem 1rem',
             backgroundColor: mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
             borderBottom: `1px solid ${mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
           }}
@@ -244,12 +272,13 @@ const BrowserWindow = forwardRef<BrowserWindowRef, BrowserWindowProps>(({
             Press Enter to save, Escape to cancel
           </Box>
           
-          <Box sx={{ marginLeft: 'auto' }}>
+          <Box sx={{ marginLeft: 'auto', position: 'relative' }}>
             <Box
               component="button"
               role="button"
               aria-label="Browser menu"
               tabIndex={0}
+              onClick={handleMenuClick}
               sx={{
                 background: 'transparent',
                 border: 'none',
@@ -267,7 +296,7 @@ const BrowserWindow = forwardRef<BrowserWindowRef, BrowserWindowProps>(({
               onKeyDown={(e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
                   e.preventDefault();
-                  // Menu functionality could be added here
+                  handleMenuClick();
                 }
               }}
             >
@@ -305,6 +334,111 @@ const BrowserWindow = forwardRef<BrowserWindowRef, BrowserWindowProps>(({
                 }} 
               />
             </Box>
+            
+            {/* Tiny upside-down person who closes the menu */}
+            {showCreature && (
+              <Box
+                sx={{
+                  position: 'absolute',
+                  top: '100%',
+                  right: '8px',
+                  zIndex: 1000,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '2px',
+                  transformOrigin: 'top center',
+                  animation: creaturePhase === 'dropping' 
+                    ? 'creatureDrop 0.5s ease-out forwards'
+                    : creaturePhase === 'annoyed'
+                    ? 'creatureAnnoyed 0.7s ease-in-out forwards'
+                    : 'creatureClose 0.6s ease-in forwards',
+                  '@keyframes creatureDrop': {
+                    '0%': { 
+                      transform: 'translateY(-25px) rotate(180deg) scale(0.4)',
+                      opacity: 0
+                    },
+                    '70%': { 
+                      transform: 'translateY(8px) rotate(180deg) scale(0.9)',
+                      opacity: 1
+                    },
+                    '100%': { 
+                      transform: 'translateY(0) rotate(180deg) scale(1)',
+                      opacity: 1
+                    }
+                  },
+                  '@keyframes creatureAnnoyed': {
+                    '0%': { 
+                      transform: 'translateY(0) rotate(180deg) scale(1)'
+                    },
+                    '30%': { 
+                      transform: 'translateY(-1px) rotate(180deg) scale(1.1)'
+                    },
+                    '60%': { 
+                      transform: 'translateY(1px) rotate(180deg) scale(0.95)'
+                    },
+                    '100%': { 
+                      transform: 'translateY(0) rotate(180deg) scale(1)'
+                    }
+                  },
+                  '@keyframes creatureClose': {
+                    '0%': { 
+                      transform: 'translateY(0) rotate(180deg) scale(1)',
+                      opacity: 1
+                    },
+                    '20%': { 
+                      transform: 'translateY(-3px) rotate(180deg) scale(1.05)',
+                      opacity: 1
+                    },
+                    '100%': { 
+                      transform: 'translateY(-35px) rotate(180deg) scale(0.2)',
+                      opacity: 0
+                    }
+                  }
+                }}
+              >
+                {/* The tiny person */}
+                <Box component="span" sx={{ fontSize: '14px' }}>😠</Box>
+                {/* Animated hand that moves to "close" the menu */}
+                <Box 
+                  component="span" 
+                  sx={{ 
+                    fontSize: '10px',
+                    animation: creaturePhase === 'annoyed' 
+                      ? 'handWave 0.7s ease-in-out forwards'
+                      : creaturePhase === 'closing'
+                      ? 'handClose 0.6s ease-in forwards'
+                      : 'none',
+                    '@keyframes handWave': {
+                      '0%, 100%': { 
+                        transform: 'rotate(0deg) translateX(0px)'
+                      },
+                      '25%': { 
+                        transform: 'rotate(-15deg) translateX(-1px)'
+                      },
+                      '75%': { 
+                        transform: 'rotate(15deg) translateX(1px)'
+                      }
+                    },
+                    '@keyframes handClose': {
+                      '0%': { 
+                        transform: 'rotate(0deg) translateX(0px)',
+                        opacity: 1
+                      },
+                      '50%': { 
+                        transform: 'rotate(-30deg) translateX(-8px)',
+                        opacity: 1
+                      },
+                      '100%': { 
+                        transform: 'rotate(-30deg) translateX(-8px)',
+                        opacity: 0
+                      }
+                    }
+                  }}
+                >
+                  👋
+                </Box>
+              </Box>
+            )}
           </Box>
         </Box>
 
@@ -314,7 +448,7 @@ const BrowserWindow = forwardRef<BrowserWindowRef, BrowserWindowProps>(({
           aria-label="Browser window content area"
           sx={{
             backgroundColor: mode === 'dark' ? muiTheme.palette.background.paper : '#fff',
-            padding: '1rem',
+            padding: '0.5rem',
             transition: 'background-color 0.3s ease',
           }}
         >
