@@ -8,5 +8,6 @@ export { useEditableState } from './useEditableState';
 export { useSliderState } from './useSliderState';
 export { useLocalStorage } from './useLocalStorage';
 export { useDownloadImage } from './useDownloadImage';
+export { useDownloadImageLazy } from './useDownloadImageLazy';
 
 // Type exports would be available through the hook exports themselves

@@ -1,10 +1,9 @@
 /**
- * @fileoverview Custom hook for downloading DOM elements as images using
- * html2canvas library with configurable options and error handling.
+ * @fileoverview Lazy-loaded version of useDownloadImage hook that dynamically
+ * imports html2canvas only when needed, significantly reducing initial bundle size.
  */
 
 import { useCallback, useState } from 'react';
-import html2canvas from 'html2canvas';
 
 /**
  * Options for configuring the image download functionality.
@@ -24,9 +23,9 @@ interface DownloadImageOptions {
 
 /**
  * Custom hook that provides functionality to capture and download DOM elements as images.
- * Uses html2canvas to render the element and triggers a download.
+ * Lazy loads html2canvas to reduce initial bundle size.
  */
-export const useDownloadImage = () => {
+export const useDownloadImageLazy = () => {
   const [isDownloading, setIsDownloading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -51,7 +50,12 @@ export const useDownloadImage = () => {
     setError(null);
 
     try {
-      console.log('Starting html2canvas capture for element:', element);
+      // Dynamically import html2canvas only when needed
+      // This creates a separate chunk that's loaded on demand
+      const { default: html2canvas } = await import('html2canvas');
+      
+      console.log('html2canvas loaded dynamically');
+      console.log('Starting capture for element:', element);
       console.log('Element dimensions:', element.offsetWidth, 'x', element.offsetHeight);
       
       // Configure html2canvas options for precise element capture
