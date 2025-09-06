@@ -6,30 +6,26 @@
 import { Card, CardContent, Typography, useTheme } from '@mui/material'
 
 /**
- * Props for the InstructionsCard component.
- */
-interface InstructionsCardProps {
-  /** Text to display for the upload button in the instructions */
-  buttonText?: string
-}
-
-/**
  * A card component that displays instructional guidance for the browser window
  * mockup functionality with themed styling.
  * 
- * @param props - The component props
  * @returns The InstructionsCard component
  */
-function InstructionsCard({ buttonText = 'Upload File' }: InstructionsCardProps) {
+function InstructionsCard() {
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
 
   return (
     <Card 
+      component="section"
+      role="region"
+      aria-labelledby="instructions-heading"
       sx={{ 
         display: 'flex', 
         justifyContent: 'center', 
-        maxWidth: '600px',
+        width: '100%',
+        minWidth: 370,
+        height: 215,
         mb: 3,
         backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : undefined,
         transition: 'all 0.3s ease',
@@ -37,8 +33,22 @@ function InstructionsCard({ buttonText = 'Upload File' }: InstructionsCardProps)
     >
       <CardContent sx={{ width: '100%' }}>
         <Typography 
+          id="instructions-heading"
+          variant="h6"
+          component="h2"
+          sx={{ 
+            fontSize: '1rem',
+            fontWeight: 600,
+            mb: 1.5,
+            color: 'text.primary'
+          }}
+        >
+          How to Use
+        </Typography>
+        <Typography 
           variant="body2" 
           color="text.secondary" 
+          component="div"
           sx={{ 
             textAlign: 'left',
             '& ol': {
@@ -52,10 +62,11 @@ function InstructionsCard({ buttonText = 'Upload File' }: InstructionsCardProps)
           }}
         >
           <ol>
-            <li>Click the "{buttonText}" button to upload an image</li>
-            <li>Once uploaded, the image will appear in a browser window mockup</li>
+            <li>Drag and drop or click to select an image</li>
+            <li>Image appears in browser mockup after upload</li>
             <li>Adjust the browser window width using the slider</li>
             <li>Click on the URL bar to edit the displayed address</li>
+            <li>Click "Download" to save the mockup</li>
           </ol>
         </Typography>
       </CardContent>

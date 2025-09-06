@@ -1,7 +1,6 @@
 import React, { useRef } from 'react'
-import { Typography, Box, Container, useTheme, Alert, Button } from '@mui/material'
-import { Download } from '@mui/icons-material'
-import { BrowserWindow, FileUploader, ThemeToggle } from './components'
+import { Typography, Box, Container, useTheme, Alert } from '@mui/material'
+import { BrowserWindow, FileUploader, ThemeToggle, SectionErrorBoundary } from './components'
 import { useFileReader, useDownloadImage } from './hooks'
 import { isImageFile, formatFileSize } from './utils/fileHelpers'
 import { extractFileMetadata, createFileSummary } from './utils/fileMetadataHelpers'
@@ -28,6 +27,16 @@ function App() {
     const selectedFile = event.target.files?.[0]
     if (!selectedFile) return
 
+    await processFile(selectedFile)
+  }
+
+  // Handler for file drop
+  const handleFileDrop = async (file: File) => {
+    await processFile(file)
+  }
+
+  // Common file processing logic
+  const processFile = async (selectedFile: File) => {
     // Extract metadata using pure utility functions
     const metadata = extractFileMetadata(selectedFile)
     const summary = createFileSummary(metadata)
@@ -48,16 +57,20 @@ function App() {
       downloadImage(browserElement, {
         filename: 'browser-window-screenshot',
         format: 'png',
-        backgroundColor: isDark ? '#121212' : '#ffffff',
-        scale: 2
+        backgroundColor: isDark ? '#121212' : '#ffffff'
       })
     }
   }
 
   return (
-    <Container maxWidth="lg">
-      <ThemeToggle />
+    <Container maxWidth="lg" component="div" role="application" aria-label="Browser Window Mockup Application">
+      <SectionErrorBoundary sectionName="Theme Toggle" minimal>
+        <ThemeToggle />
+      </SectionErrorBoundary>
+      
       <Box 
+        component="main"
+        role="main"
         sx={{ 
           my: 4, 
           display: 'flex', 
@@ -91,34 +104,25 @@ function App() {
           </Alert>
         )}
         
-        <FileUploader
-          buttonText="Select Image"
-          accept="image/*"
-          onFileChange={handleFileSelect}
-          additionalButton={imageUrl ? (
-            <Button
-              variant="contained"
-              color="success"
-              startIcon={<Download />}
-              onClick={handleDownload}
-              disabled={isDownloading}
-              sx={{ 
-                transition: 'all 0.3s ease',
-                fontWeight: 500,
-              }}
-            >
-              Download
-            </Button>
-          ) : undefined}
-        />
+        <SectionErrorBoundary sectionName="File Uploader">
+          <FileUploader
+            accept="image/*"
+            onFileChange={handleFileSelect}
+            onFileDrop={handleFileDrop}
+          />
+        </SectionErrorBoundary>
 
         {imageUrl && typeof imageUrl === 'string' && (
-          <BrowserWindow 
-            ref={browserWindowRef}
-            imageUrl={imageUrl} 
-            url={initialUrl}
-            initialWidth={800}
-          />
+          <SectionErrorBoundary sectionName="Browser Window Preview">
+            <BrowserWindow 
+              ref={browserWindowRef}
+              imageUrl={imageUrl} 
+              url={initialUrl}
+              initialWidth={800}
+              onDownload={handleDownload}
+              isDownloading={isDownloading}
+            />
+          </SectionErrorBoundary>
         )}
         
       </Box>

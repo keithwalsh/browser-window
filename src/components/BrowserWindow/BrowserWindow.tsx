@@ -4,7 +4,8 @@
  */
 
 import { useRef, forwardRef, useImperativeHandle } from 'react';
-import { Box, Slider, Paper, useTheme as useMuiTheme } from '@mui/material';
+import { Box, Slider, Paper, Button, useTheme as useMuiTheme } from '@mui/material';
+import { Download } from '@mui/icons-material';
 import styles from './BrowserWindow.module.css';
 import { useTheme } from '../../theme/useTheme';
 import { useEditableState, useSliderState } from '../../hooks';
@@ -19,6 +20,10 @@ interface BrowserWindowProps {
   url?: string;
   /** The initial width of the browser window in pixels */
   initialWidth?: number;
+  /** Callback function for the download button */
+  onDownload?: () => void;
+  /** Whether the download is in progress */
+  isDownloading?: boolean;
 }
 
 /**
@@ -37,7 +42,9 @@ export interface BrowserWindowRef {
 const BrowserWindow = forwardRef<BrowserWindowRef, BrowserWindowProps>(({ 
   imageUrl, 
   url: initialUrl = 'http://localhost:3000',
-  initialWidth = 800 
+  initialWidth = 800,
+  onDownload,
+  isDownloading = false
 }, ref) => {
   const { mode } = useTheme();
   const muiTheme = useMuiTheme();
@@ -68,13 +75,15 @@ const BrowserWindow = forwardRef<BrowserWindowRef, BrowserWindowProps>(({
   });
 
   return (
-    <Box>
-      <Box sx={{ width: '100%', maxWidth: '600px', mx: 'auto', mb: 2 }}>
+    <Box sx={{ width: '100%' }} component="section" role="region" aria-label="Browser window mockup">
+      <Box sx={{ width: '100%', maxWidth: '600px', mx: 'auto', mb: 1, mt: 4 }}>
         <Slider
           value={width}
           onChange={handleResize}
           aria-labelledby="window-width-slider"
+          aria-describedby="width-description"
           valueLabelDisplay="auto"
+          valueLabelFormat={(value) => `${value}px`}
           step={10}
           marks={[
             { value: 400, label: '400px' },
@@ -83,8 +92,40 @@ const BrowserWindow = forwardRef<BrowserWindowRef, BrowserWindowProps>(({
           ]}
           min={400}
           max={1000}
+          sx={{
+            '& .MuiSlider-thumb': {
+              '&:focus-visible': {
+                boxShadow: `0 0 0 3px ${muiTheme.palette.primary.main}40`,
+              },
+            },
+          }}
         />
       </Box>
+      
+      {onDownload && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
+          <Button
+            variant="contained"
+            color="success"
+            startIcon={<Download />}
+            onClick={onDownload}
+            disabled={isDownloading}
+            aria-label="Download browser window as PNG image"
+            aria-describedby="download-description"
+            sx={{ 
+              transition: 'all 0.3s ease',
+              fontWeight: 500,
+              '&:focus-visible': {
+                outline: '3px solid',
+                outlineColor: 'success.main',
+                outlineOffset: '2px',
+              },
+            }}
+          >
+            {isDownloading ? 'Downloading...' : 'Download'}
+          </Button>
+        </Box>
+      )}
       
       <Paper 
         ref={browserWindowRef}
@@ -99,6 +140,9 @@ const BrowserWindow = forwardRef<BrowserWindowRef, BrowserWindowProps>(({
         }}
       >
         <Box 
+          component="header"
+          role="banner"
+          aria-label="Browser window controls and address bar"
           sx={{
             display: 'flex',
             alignItems: 'center',
@@ -114,7 +158,18 @@ const BrowserWindow = forwardRef<BrowserWindowRef, BrowserWindowProps>(({
           </div>
           
           <Box 
+            component="div"
+            role="textbox"
+            aria-label="Website URL address bar"
+            aria-describedby="url-instructions"
+            tabIndex={isEditingUrl ? -1 : 0}
             onClick={handleUrlClick}
+            onKeyDown={(e) => {
+              if ((e.key === 'Enter' || e.key === ' ') && !isEditingUrl) {
+                e.preventDefault();
+                handleUrlClick();
+              }
+            }}
             sx={{
               flex: '1 0',
               margin: '0 1rem 0 0.5rem',
@@ -129,6 +184,13 @@ const BrowserWindow = forwardRef<BrowserWindowRef, BrowserWindowProps>(({
               whiteSpace: 'nowrap',
               cursor: 'text',
               transition: 'all 0.3s ease',
+              '&:focus-visible': {
+                outline: `2px solid ${muiTheme.palette.primary.main}`,
+                outlineOffset: '2px',
+              },
+              '&:hover': {
+                backgroundColor: mode === 'dark' ? 'rgba(0,0,0,0.4)' : 'rgba(255,255,255,0.9)',
+              },
             }}
           >
             {isEditingUrl ? (
@@ -138,6 +200,8 @@ const BrowserWindow = forwardRef<BrowserWindowRef, BrowserWindowProps>(({
                 onChange={handleUrlChange}
                 onBlur={handleUrlBlur}
                 onKeyDown={handleUrlKeyDown}
+                aria-label="Edit website URL"
+                aria-describedby="url-edit-instructions"
                 style={{
                   width: '100%',
                   border: 'none',
@@ -154,8 +218,59 @@ const BrowserWindow = forwardRef<BrowserWindowRef, BrowserWindowProps>(({
             )}
           </Box>
           
+          {/* Hidden instructions for screen readers */}
+          <Box 
+            id="url-instructions" 
+            sx={{ 
+              position: 'absolute', 
+              left: '-10000px', 
+              width: '1px', 
+              height: '1px', 
+              overflow: 'hidden' 
+            }}
+          >
+            Click or press Enter to edit the URL
+          </Box>
+          <Box 
+            id="url-edit-instructions" 
+            sx={{ 
+              position: 'absolute', 
+              left: '-10000px', 
+              width: '1px', 
+              height: '1px', 
+              overflow: 'hidden' 
+            }}
+          >
+            Press Enter to save, Escape to cancel
+          </Box>
+          
           <Box sx={{ marginLeft: 'auto' }}>
-            <div>
+            <Box
+              component="button"
+              role="button"
+              aria-label="Browser menu"
+              tabIndex={0}
+              sx={{
+                background: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                padding: '4px',
+                borderRadius: '4px',
+                '&:focus-visible': {
+                  outline: `2px solid ${muiTheme.palette.primary.main}`,
+                  outlineOffset: '2px',
+                },
+                '&:hover': {
+                  backgroundColor: mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                },
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  // Menu functionality could be added here
+                }
+              }}
+            >
               <Box 
                 component="span" 
                 sx={{
@@ -189,20 +304,42 @@ const BrowserWindow = forwardRef<BrowserWindowRef, BrowserWindowProps>(({
                   transition: 'background-color 0.3s ease',
                 }} 
               />
-            </div>
+            </Box>
           </Box>
         </Box>
 
         <Box 
+          component="main"
+          role="main"
+          aria-label="Browser window content area"
           sx={{
             backgroundColor: mode === 'dark' ? muiTheme.palette.background.paper : '#fff',
             padding: '1rem',
             transition: 'background-color 0.3s ease',
           }}
         >
-          <img src={imageUrl} alt="Browser window content" className={styles.browserImage} />
+          <img 
+            src={imageUrl} 
+            alt="User-uploaded content displayed in browser window mockup" 
+            className={styles.browserImage}
+            loading="lazy"
+          />
         </Box>
       </Paper>
+      
+      {/* Hidden descriptions for screen readers */}
+      <Box 
+        id="download-description" 
+        sx={{ 
+          position: 'absolute', 
+          left: '-10000px', 
+          width: '1px', 
+          height: '1px', 
+          overflow: 'hidden' 
+        }}
+      >
+        Downloads the browser window mockup as a PNG image file
+      </Box>
     </Box>
   );
 });

@@ -18,8 +18,6 @@ interface DownloadImageOptions {
   quality?: number;
   /** Background color for transparent elements */
   backgroundColor?: string;
-  /** Scale factor for higher resolution images */
-  scale?: number;
 }
 
 /**
@@ -43,8 +41,7 @@ export const useDownloadImage = () => {
       filename = 'browser-window',
       format = 'png',
       quality = 0.9,
-      backgroundColor = '#ffffff',
-      scale = 2
+      backgroundColor = '#ffffff'
     } = options;
 
     setIsDownloading(true);
@@ -56,17 +53,12 @@ export const useDownloadImage = () => {
       
       // Configure html2canvas options for precise element capture
       const canvas = await html2canvas(element, {
-        backgroundColor: 'transparent',
-        scale,
+        background: 'transparent',
         useCORS: false,
         allowTaint: true,
         logging: false,
-        scrollX: 0,
-        scrollY: 0,
         width: element.offsetWidth,
         height: element.offsetHeight,
-        windowWidth: element.offsetWidth,
-        windowHeight: element.offsetHeight,
       });
 
       console.log('Canvas created:', canvas.width, 'x', canvas.height);
